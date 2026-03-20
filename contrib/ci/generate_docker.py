@@ -12,7 +12,6 @@ import sys
 
 from fwupd_setup_helpers import parse_dependencies
 
-
 # this is idiosyncratic for an amazing reason
 RUNNER_ARCH_DEPS_MAP = {
     "ARM": "armhf",
@@ -49,12 +48,11 @@ template_file = os.path.join(directory, f"Dockerfile-{TARGET_DISTRO}.in")
 if not os.path.exists(template_file):
     print(f"Missing input file {template_file} for {TARGET_DISTRO}")
     sys.exit(1)
-
 with open(template_file) as file:
     template = file.read()
 
 
-# special case for i386-based debian container
+# special case for i386 and tartan debian container
 match TARGET_DISTRO:
     case "debian-i386":
         template = template.replace("FROM debian:testing", "FROM i386/debian:testing")
@@ -62,6 +60,17 @@ match TARGET_DISTRO:
         template = template.replace("FROM debian:testing", "FROM debian:unstable")
 
 
+# insert commands to prepare cross compile
+if MATRIX_CROSS:
+    cross_setup = f"""\
+    sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/debian.sources; \\
+    dpkg --add-architecture {MATRIX_CROSS};"""
+else:
+    cross_setup = "    "
+template = template.replace("%%%SETUP%%%", cross_setup)
+
+
+# insert dependencies to install
 distro = TARGET_DISTRO.split("-")[0]
 if MATRIX_CROSS:
     deps = parse_dependencies(distro, MATRIX_CROSS, False, cross=True)
@@ -71,8 +80,8 @@ else:
 deps = sorted(set(deps))
 deps = [f"    {i}" for i in deps]
 deps = " \\\n".join(deps)
-
 content = template.replace("%%%DEPENDENCIES%%%", deps)
+
 
 with open("Dockerfile", "w") as file:
     file.write(content)
