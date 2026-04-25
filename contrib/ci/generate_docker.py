@@ -75,6 +75,8 @@ distro = MATRIX_DISTRO.split("-")[0]
 if MATRIX_CROSS:
     deps = parse_dependencies(distro, MATRIX_CROSS, False, cross=True)
     deps += [f"crossbuild-essential-{MATRIX_CROSS}"]
+elif MATRIX_DISTRO == "debian-i386":
+    deps = parse_dependencies(distro, "i386", False)
 else:
     deps = parse_dependencies(distro, RUNNER_ARCH_DEPS_MAP[RUNNER_ARCH], False)
 deps = sorted(set(deps))
