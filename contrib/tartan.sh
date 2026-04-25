@@ -1,5 +1,5 @@
 #!/bin/sh
-/usr/bin/scan-build-18 \
+exec /usr/bin/scan-build-18 \
     -load-plugin /usr/lib64/tartan/18.1/libtartan.so \
     -disable-checker core.CallAndMessage \
     -disable-checker core.NullDereference \
