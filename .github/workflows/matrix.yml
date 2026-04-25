@@ -52,7 +52,7 @@ jobs:
               -e "MATRIX_CROSS=$MATRIX_CROSS" \
               -e "VERSION=$VERSION" \
               -v $GITHUB_WORKSPACE:/github/workspace \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest"
+              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}${{ case(contains(matrix.distro, '-'), '', runner.arch == 'ARM64', '-arm64', '-amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest"
       - name: Save any applicable artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -77,7 +77,7 @@ jobs:
               -e "CI_NETWORK=$CI_NETWORK" \
               -e "CI=$CI" \
               -v $GITHUB_WORKSPACE:/github/workspace \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest" \
+              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}${{ case(contains(matrix.distro, '-'), '', runner.arch == 'ARM64', '-arm64', '-amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest" \
               contrib/ci/${{matrix.distro}}-test.sh
       - name: Save any coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
