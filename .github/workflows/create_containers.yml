@@ -20,9 +20,6 @@ jobs:
         cross: [null]
         include:
           - distro: debian
-            runner: ubuntu-latest
-            cross: i386
-          - distro: debian
             runner: ubuntu-24.04-arm
             cross: null
           - distro: debian
