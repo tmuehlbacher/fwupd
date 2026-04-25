@@ -41,23 +41,23 @@ def get_container_cmd():
 
 directory = os.path.dirname(sys.argv[0])
 MATRIX_CROSS = getenv_unwrap("MATRIX_CROSS")
+MATRIX_DISTRO = getenv_unwrap("MATRIX_DISTRO")
 RUNNER_ARCH = getenv_unwrap("RUNNER_ARCH")
-TARGET_DISTRO = getenv_unwrap("TARGET_DISTRO")
 
-template_file = os.path.join(directory, f"Dockerfile-{TARGET_DISTRO}.in")
+template_file = os.path.join(directory, f"Dockerfile-{MATRIX_DISTRO}.in")
 if not os.path.exists(template_file):
-    print(f"Missing input file {template_file} for {TARGET_DISTRO}")
+    print(f"Missing input file {template_file} for {MATRIX_DISTRO}")
     sys.exit(1)
 with open(template_file) as file:
-    template = file.read()
+    content = file.read()
 
 
 # special case for i386 and tartan debian container
-match TARGET_DISTRO:
+match MATRIX_DISTRO:
     case "debian-i386":
-        template = template.replace("FROM debian:testing", "FROM i386/debian:testing")
+        content = content.replace("FROM debian:testing", "FROM i386/debian:testing")
     case "debian-tartan":
-        template = template.replace("FROM debian:testing", "FROM debian:unstable")
+        content = content.replace("FROM debian:testing", "FROM debian:unstable")
 
 
 # insert commands to prepare cross compile
@@ -67,11 +67,11 @@ if MATRIX_CROSS:
     dpkg --add-architecture {MATRIX_CROSS};"""
 else:
     cross_setup = "    "
-template = template.replace("%%%SETUP%%%", cross_setup)
+content = content.replace("%%%SETUP%%%", cross_setup)
 
 
 # insert dependencies to install
-distro = TARGET_DISTRO.split("-")[0]
+distro = MATRIX_DISTRO.split("-")[0]
 if MATRIX_CROSS:
     deps = parse_dependencies(distro, MATRIX_CROSS, False, cross=True)
     deps += [f"crossbuild-essential-{MATRIX_CROSS}"]
@@ -80,7 +80,7 @@ else:
 deps = sorted(set(deps))
 deps = [f"    {i}" for i in deps]
 deps = " \\\n".join(deps)
-content = template.replace("%%%DEPENDENCIES%%%", deps)
+content = content.replace("%%%DEPENDENCIES%%%", deps)
 
 
 with open("Dockerfile", "w") as file:
@@ -88,7 +88,7 @@ with open("Dockerfile", "w") as file:
 
 if len(sys.argv) == 2 and sys.argv[1] == "build":
     cmd = get_container_cmd()
-    args = [cmd, "build", "-t", f"fwupd-{TARGET_DISTRO}"]
+    args = [cmd, "build", "-t", f"fwupd-{MATRIX_DISTRO}"]
     if "http_proxy" in os.environ:
         args += [f"--build-arg=http_proxy={os.environ['http_proxy']}"]
     if "https_proxy" in os.environ:
